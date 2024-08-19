@@ -6,6 +6,7 @@ public class Matcher
 {
     private const int _levelRange = 10; // allow difference of 10 levels between matched players.
     
+    // Try to find a match in the given player queue. 
     public Party? TryMatchPlayers(List<Player> queue)
     {
         lock (queue)

@@ -15,6 +15,7 @@ public class PlayerQueueManager
         _partyManager = partyManager;
     }
 
+    // Add player to the line and see if the matcher can match them.
     public void Enqueue(Player player)
     {
         lock (_queue)

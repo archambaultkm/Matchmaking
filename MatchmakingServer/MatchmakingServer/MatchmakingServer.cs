@@ -52,6 +52,7 @@ public class MatchmakingServer
         // ReSharper disable once FunctionNeverReturns
     }
     
+    // Add client to the queue and communicate status back to them.
     private void HandleClient(TcpClient client)
     {
         try
@@ -64,14 +65,17 @@ public class MatchmakingServer
             // Deserialize and add player
             var player = _playerSerializer.Deserialize(data);
             _connectedClients[player.Id] = client;
+            // When added to the queue, the manager will attempt to find a match.
             _playerQueueManager.Enqueue(player);
 
+            // If the newest player completed a team, output to server program.
             if (_playerQueueManager.HasMatchedParty(player))
             {
                 var party = _playerQueueManager.GetPlayerParty(player);
                 BroadcastMatchResult(party);
                 Console.WriteLine($"Party {party.Id} is complete.");
             }
+            // Server program output that more players are needed.
             else
             {
                 string responseMessage = "Waiting for more players to join.";
@@ -86,6 +90,7 @@ public class MatchmakingServer
         }
     }
     
+    // When a party is completed, provide feedback to all players about their team.
     private void BroadcastMatchResult(Party party)
     {
         foreach (var player in party.Players)
@@ -101,7 +106,7 @@ public class MatchmakingServer
                 // Server feedback.
                 Console.WriteLine($"Sent match results to player {player.Id}.");
 
-                // Close the connection after sending the response
+                // Close the connection to the client after sending the response
                 client.Close();
                 _connectedClients.Remove(player.Id, out _);
             }
