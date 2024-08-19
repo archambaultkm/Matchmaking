@@ -12,7 +12,7 @@ namespace Matchmaking.MatchmakingServer;
 public class MatchmakingServer
 {
     private readonly TcpListener _listener;
-    private readonly MatchMakingService _matchmakingService;
+    private readonly PlayerQueueManager _playerQueueManager;
     private readonly IPlayerSerializer _playerSerializer;
     private readonly IPartySerializer _partySerializer;
     private readonly ConcurrentDictionary<int, TcpClient> _connectedClients = new ConcurrentDictionary<int, TcpClient>();
@@ -21,7 +21,7 @@ public class MatchmakingServer
     {
         _playerSerializer = new PlayerSerializer();
         _partySerializer = new PartySerializer();
-        _matchmakingService = new MatchMakingService();
+        _playerQueueManager = new PlayerQueueManager(new Matcher(), new PartyManager());
         _listener = new TcpListener(serverIp, port);
     }
     
@@ -64,11 +64,11 @@ public class MatchmakingServer
             // Deserialize and add player
             var player = _playerSerializer.Deserialize(data);
             _connectedClients[player.Id] = client;
-            _matchmakingService.Enqueue(player);
+            _playerQueueManager.Enqueue(player);
 
-            if (_matchmakingService.HasMatchedParty(player))
+            if (_playerQueueManager.HasMatchedParty(player))
             {
-                var party = _matchmakingService.GetPlayerParty(player);
+                var party = _playerQueueManager.GetPlayerParty(player);
                 BroadcastMatchResult(party);
                 Console.WriteLine($"Party {party.Id} is complete.");
             }
@@ -92,10 +92,13 @@ public class MatchmakingServer
         {
             if (_connectedClients.TryGetValue(player.Id, out var client))
             {
+                // Send the player their party information.
                 var stream = client.GetStream();
-                var responseMessage = "You have been matched into Party " + _partySerializer.Serialize(party); 
+                var responseMessage = $"You have been matched into Party {_partySerializer.Serialize(party)}"; 
                 var responseData = Encoding.ASCII.GetBytes(responseMessage);
                 stream.Write(responseData, 0, responseData.Length);
+                
+                // Server feedback.
                 Console.WriteLine($"Sent match results to player {player.Id}.");
 
                 // Close the connection after sending the response

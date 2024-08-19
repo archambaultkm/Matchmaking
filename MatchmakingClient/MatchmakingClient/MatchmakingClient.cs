@@ -12,10 +12,9 @@ public class MatchmakingClient
     private readonly PlayerSerializer _playerSerializer;
     private readonly TcpClient _client;
     
-    public MatchmakingClient()
+    public MatchmakingClient(int level)
     {
-        // @todo client data should use args
-        _player = new Player(1500, "NA");
+        _player = new Player(level, "NA");
         _playerSerializer = new PlayerSerializer();
         _client = new TcpClient();
     }

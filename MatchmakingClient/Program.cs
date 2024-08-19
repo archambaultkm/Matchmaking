@@ -4,8 +4,19 @@
     {
         static void Main(string[] args)
         {
-            var client = new MatchmakingClient.MatchmakingClient();
-            client.Start("127.0.0.1", 5000);
+            try
+            {
+                var client = new MatchmakingClient.MatchmakingClient(int.Parse(args[0]));
+                client.Start("127.0.0.1", 5000);
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("Enter a valid integer for the player level.");
+            }
+            catch (OverflowException)
+            {
+                Console.WriteLine("The number is outside the bounds of an integer.");
+            }
         }
     }
 }
